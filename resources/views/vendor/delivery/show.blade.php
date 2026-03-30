@@ -1,4 +1,78 @@
 @extends('layouts.vendor')
+@section('title', 'Delivery ' . $delivery->tracking_number)
+@section('page-title', 'Delivery Details')
+
+@section('content')
+
+    {{-- Back link --}}
+    <div class="gap-section">
+        <a href="{{ route('vendor.delivery.index') }}" class="vd-btn vd-btn--ghost vd-btn--sm">
+            <i class="bi bi-arrow-left"></i> Back to Deliveries
+        </a>
+    </div>
+
+    <div class="row g-3">
+
+        {{-- Left column: delivery info --}}
+        <div class="col-lg-8">
+
+            {{-- Delivery overview --}}
+            <div class="vd-card gap-section">
+                <div class="vd-card__header">
+                    <span class="vd-card__title"><i class="bi bi-truck"></i> {{ $delivery->tracking_number }}</span>
+                    <span class="{{ $delivery->status_badge_class }}" style="font-size:0.85rem;">
+                        {{ $delivery->status_label }}
+                    </span>
+                </div>
+                <div class="vd-card__body">
+                    <div class="detail-grid">
+                        <div>
+                            <div class="detail-item__label">Tracking Number</div>
+                            <div class="detail-item__value mono">{{ $delivery->tracking_number ?? '-' }}</div>
+                        </div>
+                        <div>
+                            <div class="detail-item__label">Status</div>
+                            <div class="detail-item__value">
+                                <span class="{{ $delivery->status_badge_class }}">{{ $delivery->status_label }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="detail-item__label">Assigned To</div>
+                            <div class="detail-item__value">
+                                @if ($delivery->assignedEmployee)
+                                    {{ $delivery->assignedEmployee->user->name ?? 'Employee #' . $delivery->assigned_to }}
+                                @else
+                                    <span class="text-muted">Unassigned</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div>
+                            <div class="detail-item__label">Recipient</div>
+                            <div class="detail-item__value">{{ $delivery->recipient_name ?? '-' }}</div>
+                        </div>
+                        <div>
+                            <div class="detail-item__label">Scheduled At</div>
+                            <div class="detail-item__value">
+                                {{ $delivery->scheduled_at ? $delivery->scheduled_at->format('M d, Y h:i A') : '-' }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="detail-item__label">Dispatched At</div>
+                            <div class="detail-item__value">
+                                {{ $delivery->dispatched_at ? $delivery->dispatched_at->format('M d, Y h:i A') : '-' }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="detail-item__label">Delivered At</div>
+                            <div class="detail-item__value">
+                                {{ $delivery->delivered_at ? $delivery->delivered_at->format('M d, Y h:i A') : '-' }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="detail-item__label">Created</div>
+                            <div class="detail-item__value">{{ $delivery->created_at->format('M d, Y h:i A') }}</div>
+                        </div>
+@extends('layouts.vendor')
 @section('title', 'Delivery · ' . $delivery->tracking_number)
 
 @section('breadcrumb')

@@ -1,4 +1,11 @@
 @extends('layouts.vendor')
+@section('title', 'Deliveries')
+@section('page-title', 'Deliveries')
+
+@section('content')
+
+    {{-- Stats strip --}}
+@extends('layouts.vendor')
 
 @section('title', 'Delivery')
 @section('page-title', 'Delivery')

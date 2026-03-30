@@ -56,6 +56,7 @@ use App\Http\Controllers\Supplier\SupplierProductController;
 use App\Http\Controllers\Vendor\PurchaseOrderController;
 use App\Http\Controllers\Vendor\PurchaseRequestController;
 use App\Http\Controllers\Vendor\StoreSettingsController;
+use App\Http\Controllers\Vendor\DeliveryController as VendorDeliveryController;
 use App\Http\Controllers\Vendor\VendorSolarContractController;
 use App\Http\Controllers\Vendor\VendorSolarController;
 use Illuminate\Support\Facades\Mail;
