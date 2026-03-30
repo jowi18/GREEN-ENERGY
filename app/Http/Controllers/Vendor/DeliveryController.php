@@ -4,60 +4,42 @@ namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Delivery;
-use App\Services\OrderManagementService;
 use Illuminate\Http\Request;
 
 class DeliveryController extends Controller
 {
-    public function __construct(
-        private readonly OrderManagementService $orderService
-    ) {}
-
     private function vendor()
     {
         $u = auth()->user();
         return $u->isEmployee() ? $u->employee->vendor : $u->vendor;
     }
 
-    // ── Delivery listing (all deliveries across orders) ─────────────────
+    // ── Delivery list ───────────────────────────────────────────────────────
 
     public function index(Request $request)
     {
         $vendor = $this->vendor();
 
-        $query = Delivery::with(['order.customer', 'assignedEmployee'])
-            ->forVendor($vendor->id);
+        $query = Delivery::forVendor($vendor->id)
+            ->with(['order', 'assignedEmployee'])
+            ->latest();
 
-        // Status filter
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Search by tracking number or order number
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('tracking_number', 'like', "%{$request->search}%")
-                  ->orWhereHas('order', fn ($oq) =>
-                      $oq->where('order_number', 'like', "%{$request->search}%")
-                  )
-                  ->orWhereHas('order.customer', fn ($cq) =>
-                      $cq->where('first_name', 'like', "%{$request->search}%")
-                         ->orWhere('last_name', 'like', "%{$request->search}%")
-                  );
+        // Search filter
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('tracking_number', 'like', "%{$search}%")
+                  ->orWhereHas('order', fn ($oq) => $oq->where('order_number', 'like', "%{$search}%"));
             });
         }
 
-        // Date filters
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+        // Status filter
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
         }
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
+        $deliveries = $query->paginate(20)->withQueryString();
 
-        $deliveries = $query->latest()->paginate(20)->withQueryString();
-
+        // Stats
         $stats = [
             'pending'          => Delivery::forVendor($vendor->id)->where('status', 'pending')->count(),
             'preparing'        => Delivery::forVendor($vendor->id)->where('status', 'preparing')->count(),
@@ -70,7 +52,7 @@ class DeliveryController extends Controller
         return view('vendor.delivery.index', compact('deliveries', 'stats'));
     }
 
-    // ── Single delivery detail ──────────────────────────────────────────
+    // ── Show single delivery ────────────────────────────────────────────────
 
     public function show(Delivery $delivery)
     {
@@ -78,12 +60,12 @@ class DeliveryController extends Controller
             abort(403);
         }
 
-        $delivery->load(['order.customer', 'order.items.product', 'assignedEmployee', 'assignedByUser']);
+        $delivery->load(['order.items.product', 'assignedEmployee', 'assignedByUser']);
 
         return view('vendor.delivery.show', compact('delivery'));
     }
 
-    // ── Update delivery status (AJAX) ───────────────────────────────────
+    // ── Update delivery status ──────────────────────────────────────────────
 
     public function updateStatus(Request $request, Delivery $delivery)
     {
@@ -92,34 +74,19 @@ class DeliveryController extends Controller
         }
 
         $request->validate([
-            'status' => ['required', 'string', 'in:pending,preparing,out_for_delivery,delivered,failed,returned'],
-            'notes'  => ['nullable', 'string', 'max:500'],
+            'status' => 'required|in:pending,preparing,out_for_delivery,delivered,failed,returned',
         ]);
 
-        try {
-            $updated = $this->orderService->updateDeliveryStatus(
-                $delivery,
-                $request->status,
-                $request->notes
-            );
+        $delivery->update([
+            'status' => $request->status,
+            'dispatched_at' => $request->status === 'out_for_delivery' ? now() : $delivery->dispatched_at,
+            'delivered_at'  => $request->status === 'delivered' ? now() : $delivery->delivered_at,
+        ]);
 
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success'    => true,
-                    'message'    => "Delivery {$delivery->tracking_number} updated to " . $updated->status_label . '.',
-                    'new_status' => $updated->status,
-                    'badge'      => $updated->status_badge_class,
-                    'label'      => $updated->status_label,
-                ]);
-            }
-
-            return back()->with('success', "Delivery updated to {$updated->status_label}.");
-
-        } catch (\Exception $e) {
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
-            }
-            return back()->with('error', $e->getMessage());
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'status' => $delivery->status_label]);
         }
+
+        return back()->with('success', 'Delivery status updated.');
     }
 }

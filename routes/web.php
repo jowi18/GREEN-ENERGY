@@ -39,6 +39,7 @@ use App\Http\Controllers\Vendor\HrPayrollController;
 use App\Http\Controllers\Vendor\ReviewController as VendorReviewController;
 use App\Http\Controllers\Vendor\WarrantyController as VendorWarrantyController;
 
+use App\Http\Controllers\Vendor\DeliveryController as VendorDeliveryController;
 use App\Http\Controllers\Vendor\SupplierController as VendorSupplierController;
 
 use App\Http\Controllers\Customer\{
@@ -227,10 +228,11 @@ Route::middleware(['auth', 'vendor', 'vendor.verified'])->prefix('vendor')->name
             Route::get('/{order}/invoice',    [VendorOrderController::class, 'invoice'])       ->name('invoice');
         });
 
+        // ── Delivery ─────────────────────────────────────────────────────────────
         Route::prefix('delivery')->name('delivery.')->group(function () {
-            Route::get('/',                       [VendorDeliveryController::class, 'index'])       ->name('index');
-            Route::get('/{delivery}',             [VendorDeliveryController::class, 'show'])        ->name('show');
-            Route::post('/{delivery}/status',     [VendorDeliveryController::class, 'updateStatus'])->name('status');
+            Route::get('/',                    [VendorDeliveryController::class, 'index'])        ->name('index');
+            Route::get('/{delivery}',          [VendorDeliveryController::class, 'show'])         ->name('show');
+            Route::patch('/{delivery}/status',  [VendorDeliveryController::class, 'updateStatus'])->name('status');
         });
 
         Route::prefix('services')->name('services.')->group(function () {
