@@ -55,6 +55,7 @@ use App\Http\Controllers\Supplier\SupplierProductController;
 use App\Http\Controllers\Vendor\PurchaseOrderController;
 use App\Http\Controllers\Vendor\PurchaseRequestController;
 use App\Http\Controllers\Vendor\StoreSettingsController;
+use App\Http\Controllers\Vendor\DeliveryController as VendorDeliveryController;
 use App\Http\Controllers\Vendor\VendorSolarContractController;
 use App\Http\Controllers\Vendor\VendorSolarController;
 use Illuminate\Support\Facades\Mail;
@@ -224,6 +225,12 @@ Route::middleware(['auth', 'vendor', 'vendor.verified'])->prefix('vendor')->name
             Route::post('/{order}/delivery',  [VendorOrderController::class, 'assignDelivery'])->name('delivery');
             Route::post('/{order}/delivered', [VendorOrderController::class, 'markDelivered']) ->name('delivered');
             Route::get('/{order}/invoice',    [VendorOrderController::class, 'invoice'])       ->name('invoice');
+        });
+
+        Route::prefix('delivery')->name('delivery.')->group(function () {
+            Route::get('/',                       [VendorDeliveryController::class, 'index'])       ->name('index');
+            Route::get('/{delivery}',             [VendorDeliveryController::class, 'show'])        ->name('show');
+            Route::post('/{delivery}/status',     [VendorDeliveryController::class, 'updateStatus'])->name('status');
         });
 
         Route::prefix('services')->name('services.')->group(function () {

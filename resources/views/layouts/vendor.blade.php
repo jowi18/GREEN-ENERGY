@@ -244,7 +244,7 @@
 
                 @if ($canSee('delivery'))
                     <div class="vd-nav__item">
-                        <a href="#"
+                        <a href="{{ route('vendor.delivery.index') }}"
                             class="vd-nav__link {{ request()->routeIs('vendor.delivery*') ? 'active' : '' }}">
                             <i class="bi bi-truck vd-nav__icon"></i>
                             <span class="vd-nav__text">Delivery</span>
